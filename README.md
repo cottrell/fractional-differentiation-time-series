@@ -4,11 +4,24 @@ Corrected and sanitized version of code from Advances of Machine Learning by Mar
 
 ## Best degree of diff
 
+AAPL
 <p align="center">
   <img src="doc/aapl.png">
+</p>
+FB
+<p align="center">
   <img src="doc/fb.png">
+</p>
+GS
+<p align="center">
   <img src="doc/gs.png">
+</p>
+IBM
+<p align="center">
   <img src="doc/ibm.png">
+</p>
+V
+<p align="center">
   <img src="doc/v.png">
 </p>
 
