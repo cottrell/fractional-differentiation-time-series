@@ -5,6 +5,7 @@ from numpy.fft import fft, ifft
 # small modification: wrapped 2**np.ceil(...) around int()
 # https://github.com/SimonOuellette35/FractionalDiff/blob/master/question2.py
 
+_default_thresh = 1e-4
 
 def get_weights(d, size):
     """Expanding window fraction difference weights."""
@@ -19,9 +20,12 @@ import numba
 
 @numba.njit
 def get_weights_ffd(d, thres, lim=99999):
-    """Fixed width window fraction difference weights. Just set lim to be
-    large if you want to only stop at thres."""
-    w, k = [1.0], 1
+    """Fixed width window fraction difference weights.
+    Set lim to be large if you want to only stop at thres.
+    Set thres to be zero if you want to ignore it.
+    """
+    w = [1.0]
+    k = 1
     for i in range(1, lim):
         w_ = -w[-1] / k * (d - k + 1)
         if abs(w_) < thres:
@@ -31,13 +35,17 @@ def get_weights_ffd(d, thres, lim=99999):
     w = np.array(w[::-1]).reshape(-1, 1)
     return w
 
-def frac_diff_ffd(x, d, thres=1e-5):
+def frac_diff_ffd(x, d, thres=_default_thresh, lim=None):
     assert isinstance(x, np.ndarray)
     assert x.ndim == 1
-    return _frac_diff_ffd(x, d, thres=thres)
+    if lim is None:
+        lim = len(x)
+    w, out = _frac_diff_ffd(x, d, lim, thres=thres)
+    print(f'weights is shape {w.shape}')
+    return out
 
 # this method was not faster
-# def frac_diff_ffd_stride_tricks(x, d, thres=1e-5):
+# def frac_diff_ffd_stride_tricks(x, d, thres=_default_thresh):
 #     """d is any positive real"""
 #     assert isinstance(x, np.ndarray)
 #     w = get_weights_ffd(d, thres, len(x))
@@ -48,15 +56,15 @@ def frac_diff_ffd(x, d, thres=1e-5):
 #     return output
 
 @numba.njit
-def _frac_diff_ffd(x, d, thres=1e-5):
+def _frac_diff_ffd(x, d, lim, thres=_default_thresh):
     """d is any positive real"""
-    w = get_weights_ffd(d, thres, len(x))
+    w = get_weights_ffd(d, thres, lim)
     width = len(w) - 1
     output = []
     output.extend([np.nan] * width) # the first few entries *were* zero, should be nan?
     for i in range(width, len(x)):
         output.append(np.dot(w.T, x[i - width: i + 1])[0])
-    return np.array(output)
+    return w, np.array(output)
 
 
 def fast_frac_diff(x, d):
@@ -89,8 +97,8 @@ def test_all():
 #     import pandas as pd
 # 
 #     x = np.random.randn(100)
-#     a = frac_diff_ffd(x, d, thres=1e-5)
-#     b = fracDiff_FFD_prado_original(pd.DataFrame(x), d, thres=1e-5)
+#     a = frac_diff_ffd(x, d, thres=_default_thresh)
+#     b = fracDiff_FFD_prado_original(pd.DataFrame(x), d, thres=_default_thresh)
 #     b = np.squeeze(b.values)
 #     a = a[d:]  # something wrong with the frac_diff_ffd gives extra entries of zero
 #     assert np.allclose(a, b)
@@ -102,8 +110,8 @@ def test_frac_diff_ffd_equals_original_impl(d=3):
     import pandas as pd
 
     x = np.random.randn(100)
-    a = frac_diff_ffd(x, d, thres=1e-5)
-    b = fracDiff_FFD_original_impl(pd.DataFrame(x), d, thres=1e-5)
+    a = frac_diff_ffd(x, d, thres=_default_thresh)
+    b = fracDiff_FFD_original_impl(pd.DataFrame(x), d, thres=_default_thresh)
     assert np.allclose(a, b)
     # return locals()
 

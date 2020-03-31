@@ -2,6 +2,12 @@
 
 Corrected and sanitized version of code from Advances of Machine Learning by Marcos Prado.
 
+## Diffs
+
+<p align="center">
+  <img src="doc/Figure_1.png">
+</p>
+
 ## SP500 returns
 
 <p align="center">
