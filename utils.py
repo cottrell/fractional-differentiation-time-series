@@ -1,10 +1,12 @@
 def plot_multi(data, cols=None, spacing=.1, **kwargs):
+    import matplotlib.pyplot as plt
     from pandas import plotting
 
     # Get default color style from pandas - can be changed to any other color list
     if cols is None: cols = data.columns
     if len(cols) == 0: return
-    colors = getattr(getattr(plotting, '_style'), '_get_standard_colors')(num_colors=len(cols))
+    # colors = getattr(getattr(plotting, '_style'), '_get_standard_colors')(num_colors=len(cols))
+    colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
     # First axis
     ax = data.loc[:, cols[0]].plot(label=cols[0], color=colors[0], **kwargs)

@@ -33,12 +33,12 @@ def fracDiff_original_impl(series, d, thres=0.01):
 
 def fracDiff_FFD_original_impl(series, d, thres=1e-5):
     import pandas as pd
-    from .fracdiff import get_weight_ffd
+    from .fracdiff import get_weights_ffd
 
     if isinstance(series, pd.Series):
         series = pd.DataFrame(series)
     # 1) Compute weights for the longest series
-    w = get_weight_ffd(d, thres, len(series))
+    w = get_weights_ffd(d, thres, len(series))
     width = len(w) - 1
     # df = {}
     output = []
@@ -65,12 +65,12 @@ def fracDiff_FFD_prado_original(series, d, thres=1e-5):
     Prado's implementation is totally broken for fractional d.
     """
     import pandas as pd
-    from .fracdiff import get_weight_ffd
+    from .fracdiff import get_weights_ffd
 
     if isinstance(series, pd.Series):
         series = pd.DataFrame(series)
     # 1) Compute weights for the longest series
-    w = get_weight_ffd(d, thres, len(series))
+    w = get_weights_ffd(d, thres, len(series))
     width = len(w) - 1
     # 2) Apply weights to values
     df = {}

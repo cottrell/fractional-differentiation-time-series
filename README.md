@@ -1,5 +1,6 @@
 # Fractional Differentiation on Time Series
-As described in Advances of Machine Learning by Marcos Prado
+
+Corrected and sanitized version of code from Advances of Machine Learning by Marcos Prado.
 
 ## SP500 returns
 
@@ -24,7 +25,6 @@ source venv/bin/activate
 pip install . --upgrade
 python frac_diff_sp500.py
 ```
-
 
 References:
 - https://www.wiley.com/en-us/Advances+in+Financial+Machine+Learning-p-9781119482086

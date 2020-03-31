@@ -10,7 +10,7 @@ if __name__ == '__main__':
     close = pd.read_csv(os.path.join('doc', 'sp500.csv'), index_col=0, parse_dates=True)[['Close']]
     close = close['1993':]
 
-    fracs = frac_diff_ffd(close.apply(np.log), d=0.4, thres=1e-5)
+    fracs = frac_diff_ffd(np.squeeze(close.apply(np.log).values), d=0.4, thres=1e-5)
     a = pd.DataFrame(data=np.transpose([np.array(fracs), close['Close'].values]),
                      columns=['Fractional differentiation FFD', 'SP500'])
 
