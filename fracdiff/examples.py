@@ -50,11 +50,11 @@ def example_1(symbols="aapl", df=None):
     ax.set_title(symbols)
     return locals()
 
-def example_2(symbols="aapl", df=None, thres=1e-3, maxlag=1, autolag=None, lim=None):
+def example_2(symbols="aapl", df=None, thres=1e-3, maxlag=1, autolag=None, lim=None, regression='c'):
     if df is None:
         df = get_data(symbols=symbols)
     s = np.log(df["Adj Close"])
-    l = plot_min_ffd(s, thres=thres, maxlag=maxlag, autolag=autolag, lim=lim)
+    l = plot_min_ffd(s, symbols=symbols, thres=thres, maxlag=maxlag, autolag=autolag, lim=lim, regression='c')
     ax = plt.gca()
     ax.set_title(symbols)
     return locals()
@@ -84,36 +84,59 @@ def _plot_weights(dRange, nPlots, size):
     plt.show()
     return
 
+import scipy
 
-def plot_min_ffd(s, thres=1e-2, maxlag=1, autolag=None, lim=None):
+def plot_min_ffd(s, symbols=None, thres=1e-2, maxlag=1, autolag=None, lim=None, regression='c'):
     """Finding the minimum d value that passes the ADF test.
     Input s should be prices."""
 
-    out = pd.DataFrame(columns=["adfStat", "pVal", "lags", "nObs", "95% conf", "corr"])
+    out = pd.DataFrame(columns=["adfStat", "pVal", "lags", "nObs", "95% conf", "99% conf", "corr"])
+    x = np.log(s.values)
     for d in np.linspace(0, 0.6, 50):
         # df1 -> x, df2 -> dx
-        x = np.log(s.values)
         dx = frac_diff_ffd(x, d, thres=thres, lim=lim)
 
         # this bit is important
         i = ~np.isnan(dx)
         # i = slice(None, None)
 
+        if dx[i].shape[0] < 10:
+            print(f'SKIPPING: data size after slicing is {x[i].shape[0]} from {x.shape[0]}')
+            continue
+
         dx = np.nan_to_num(dx, 0)
         # # dx = fast_frac_diff(x, d)
         corr = np.corrcoef(x[i], dx[i])[0, 1]
-        adf = adfuller(dx[i], maxlag=maxlag, regression="c", autolag=autolag)
-        out.loc[d] = list(adf[:4]) + [adf[4]["5%"]] + [corr]  # with critical value
+        adf = adfuller(dx[i], maxlag=maxlag, regression=regression, autolag=autolag)
+        out.loc[d] = list(adf[:4]) + [adf[4]["5%"], adf[4]["1%"]] + [corr]  # with critical value
 
     # TODO: need to get the best differences  and then plot them
+
+    params = np.polyfit(
+        out.index.values,
+        out['adfStat'].values, 
+        deg=3)
+
+    roots = (np.poly1d(params) - out['99% conf'].iloc[0]).roots
+    real_root = [x for x in roots if np.imag(x) == 0.0 and np.real(x) > 0]
+    assert len(real_root) == 1
+    real_root = np.real(real_root[0])
 
     plt.ion()
     fig = plt.figure(1)
     fig.clf()
-    ax = fig.subplots(2, 1)
+    ax = fig.subplots(3, 1)
     # a = out[["adfStat", "corr"]].plot(secondary_y="corr", ax=ax[0], style=".-")
     ax[0].plot(out.index, out['adfStat'], label='abfStat')
     ax[0].axhline(out["95% conf"].mean(), linewidth=1, color="r", linestyle="dotted", label='95% conf')
+    ax[0].axhline(out["99% conf"].mean(), linewidth=1, color="g", linestyle="dotted", label='99% conf')
+
+    # yy = np.linspace(*ax[0].get_ylim(), 100)
+    # ax[0].plot(np.polyval(params, yy), yy, color='r', label='fit', linestyle='--')
+    xx = np.linspace(*ax[0].get_xlim(), 100)
+    ax[0].plot(xx, np.polyval(params, xx), color='r', label='fit', linestyle='--')
+    ax[0].plot([real_root] * 2, ax[0].get_ylim(), color='y', linewidth=2, alpha=0.5)
+    
     ax2 = ax[0].twinx()
     ax2.plot(out.index, out['corr'], color='g', alpha=0.5, label='corr')
     ax[0].legend()
@@ -124,7 +147,16 @@ def plot_min_ffd(s, thres=1e-2, maxlag=1, autolag=None, lim=None):
     ax[1].plot(s.index, s.values)
     ax[1].grid()
     ax[1].set_ylabel('price')
+
+    dx = frac_diff_ffd(x, real_root, thres=thres, lim=lim)
+    dx = pd.Series(dx, s.index)
+    dx.plot(ax=ax[2])
+    ax[2].set_title(f'best d={real_root}')
+    ax[2].grid()
+
     plt.tight_layout()
     plt.show()
     print(out)
+    if symbols is not None:
+        plt.savefig(os.path.expanduser(f'~/{symbols}.png'))
     return locals()

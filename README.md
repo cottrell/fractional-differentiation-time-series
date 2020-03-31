@@ -2,6 +2,17 @@
 
 Corrected and sanitized version of code from Advances of Machine Learning by Marcos Prado.
 
+## Best degree of diff
+
+<p align="center">
+  <img src="doc/aapl.png">
+  <img src="doc/fb.png">
+  <img src="doc/gs.png">
+  <img src="doc/ibm.png">
+  <img src="doc/v.png">
+</p>
+
+
 ## Diffs
 
 <p align="center">
