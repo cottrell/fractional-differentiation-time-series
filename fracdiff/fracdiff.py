@@ -41,7 +41,7 @@ def frac_diff_ffd(x, d, thres=_default_thresh, lim=None):
     if lim is None:
         lim = len(x)
     w, out = _frac_diff_ffd(x, d, lim, thres=thres)
-    print(f'weights is shape {w.shape}')
+    # print(f'weights is shape {w.shape}')
     return out
 
 # this method was not faster
