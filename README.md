@@ -2,7 +2,7 @@
 
 Corrected and sanitized version of code from Advances of Machine Learning by Marcos Prado.
 
-## Comparison to mlfinlab Prado's original slow code
+## Comparison to Prado's original code
 
     In [176]: import mlfinlab.features.fracdiff as fd
          ...: import fracdiff.fracdiff as fd_
